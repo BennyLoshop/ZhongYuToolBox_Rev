@@ -1,0 +1,313 @@
+<template>
+  <div class="picture-page">
+    <el-tabs v-model="activeTab" class="picture-tabs">
+      <!-- 正常图库 -->
+      <el-tab-pane label="图库" name="normal">
+        <div class="section-bar">
+          <el-upload
+            :show-file-list="false"
+            accept="image/*"
+            :before-upload="beforeUpload"
+            :disabled="uploading"
+          >
+            <el-button type="primary" :icon="Upload" :loading="uploading">
+              {{ uploading ? '上传中...' : '上传图片' }}
+            </el-button>
+          </el-upload>
+        </div>
+
+        <el-empty v-if="!loading.normal && !normal.loadingMore && normal.items.length === 0" description="暂无图片" />
+        <div v-else class="grid-scroll">
+          <div class="pic-grid">
+            <div
+              v-for="item in normal.items"
+              :key="item.id"
+              class="pic-cell"
+              @click="openDetail(item)"
+            >
+              <el-image :src="proxyImgSrc(item.picture)" fit="cover" class="pic-img" lazy>
+                <template #error>
+                  <div class="pic-ph"><el-icon><Picture /></el-icon></div>
+                </template>
+              </el-image>
+            </div>
+          </div>
+          <div class="load-more">
+            <el-icon v-if="normal.loadingMore" class="rotating"><Loading /></el-icon>
+            <span v-else-if="!normal.finished">加载更多...</span>
+            <span v-else class="muted">没有更多了</span>
+          </div>
+        </div>
+      </el-tab-pane>
+
+      <!-- 回收站 -->
+      <el-tab-pane label="回收站" name="recycle">
+        <el-empty v-if="!loading.recycle && !recycle.loadingMore && recycle.items.length === 0" description="回收站为空" />
+        <div v-else class="grid-scroll">
+          <div class="pic-grid">
+            <div
+              v-for="item in recycle.items"
+              :key="item.id"
+              class="pic-cell"
+              @click="openDetail(item)"
+            >
+              <el-image :src="proxyImgSrc(item.picture)" fit="cover" class="pic-img" lazy>
+                <template #error>
+                  <div class="pic-ph"><el-icon><Picture /></el-icon></div>
+                </template>
+              </el-image>
+            </div>
+          </div>
+          <div class="load-more">
+            <el-icon v-if="recycle.loadingMore" class="rotating"><Loading /></el-icon>
+            <span v-else-if="!recycle.finished">加载更多...</span>
+            <span v-else class="muted">没有更多了</span>
+          </div>
+        </div>
+      </el-tab-pane>
+    </el-tabs>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { Upload, Picture, Loading } from '@element-plus/icons-vue'
+import { getPictures, addPicture, formatFileSize, type PictureItem } from '@/api/picture'
+import { uploadFile, fetchUserId, generateNonce } from '@/utils/oss'
+import { proxyImgSrc } from '@/utils/proxy'
+
+const router = useRouter()
+const PAGE_SIZE = 12
+
+const activeTab = ref<'normal' | 'recycle'>('normal')
+const uploading = ref(false)
+
+interface SectionState {
+  items: PictureItem[]
+  total: number
+  skip: number
+  loadingMore: boolean
+  finished: boolean
+}
+const loading = reactive({ normal: false, recycle: false })
+const normal = reactive<SectionState>({ items: [], total: 0, skip: 0, loadingMore: false, finished: false })
+const recycle = reactive<SectionState>({ items: [], total: 0, skip: 0, loadingMore: false, finished: false })
+
+function sectionOf(key: 'normal' | 'recycle'): SectionState {
+  return key === 'normal' ? normal : recycle
+}
+
+function getScrollEl(): HTMLElement | null {
+  return document.querySelector('.content') as HTMLElement | null
+}
+
+function onScroll() {
+  const key = activeTab.value
+  const s = sectionOf(key)
+  if (s.loadingMore || s.finished) return
+  const el = getScrollEl()
+  if (!el) return
+  const scrollTop = el.scrollTop
+  const clientH = el.clientHeight
+  const scrollH = el.scrollHeight
+  if (scrollTop + clientH >= scrollH - 240) {
+    loadMore(key).then(fillViewport)
+  }
+}
+
+/** 若内容未填满可视区（无滚动条），自动续加载，直到填满或结束 */
+function fillViewport() {
+  const key = activeTab.value
+  const s = sectionOf(key)
+  if (s.loadingMore || s.finished) return
+  const el = getScrollEl()
+  if (!el) return
+  if (el.scrollHeight <= el.clientHeight + 120) {
+    loadMore(key).then(() => requestAnimationFrame(fillViewport))
+  }
+}
+
+function openDetail(item: PictureItem) {
+  router.push({
+    path: '/picture/detail',
+    query: {
+      picture: item.picture,
+      name: item.name,
+      size: item.size,
+      createTime: item.createTime,
+      id: item.id
+    }
+  })
+}
+
+async function loadMore(key: 'normal' | 'recycle') {
+  const s = sectionOf(key)
+  if (s.loadingMore || s.finished) return
+  s.loadingMore = true
+  const isRecycle = key === 'recycle'
+  try {
+    const res = await getPictures(isRecycle, s.skip, PAGE_SIZE)
+    const items = res.items || []
+    const total = res.totalCount || 0
+    s.items.push(...items)
+    s.total = total
+    s.skip += items.length
+    if (s.items.length >= total) s.finished = true
+  } catch (e: any) {
+    ElMessage.error('加载失败：' + (e.message || e))
+  } finally {
+    s.loadingMore = false
+  }
+}
+
+async function loadFirst(key: 'normal' | 'recycle') {
+  loading[key] = true
+  const s = sectionOf(key)
+  s.items = []
+  s.skip = 0
+  s.finished = false
+  await loadMore(key)
+  loading[key] = false
+  await nextTick()
+  fillViewport()
+}
+
+function setupObserver() {
+  getScrollEl()?.addEventListener('scroll', onScroll, { passive: true })
+}
+function teardownObservers() {
+  getScrollEl()?.removeEventListener('scroll', onScroll)
+}
+
+async function beforeUpload(file: File) {
+  uploading.value = true
+  try {
+    let userId: string
+    try {
+      userId = await fetchUserId()
+    } catch (e: any) {
+      ElMessage.warning('无法获取用户ID：' + (e.message || e))
+      return false
+    }
+
+    const url = await uploadFile(file, userId, 'note_v2', '', file.name)
+    const sizeStr = formatFileSize(file.size)
+    const parts = url.split('/')
+    const nonce = parts[parts.length - 2] || generateNonce()
+
+    await addPicture(url, nonce, sizeStr)
+    ElMessage.success('上传成功')
+    await loadFirst('normal')
+  } catch (e: any) {
+    ElMessage.error('上传失败：' + (e.message || e))
+  } finally {
+    uploading.value = false
+  }
+  return false
+}
+
+watch(activeTab, async (tab) => {
+  const key = tab as 'normal' | 'recycle'
+  if (sectionOf(key).items.length === 0) {
+    await loadFirst(key)
+  } else {
+    await nextTick()
+    fillViewport()
+  }
+})
+
+onMounted(async () => {
+  await loadFirst('normal')
+  await loadFirst('recycle')
+  await nextTick()
+  setupObserver()
+  fillViewport()
+})
+
+onBeforeUnmount(() => {
+  teardownObservers()
+})
+</script>
+
+<style scoped>
+.picture-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.picture-tabs {
+  --el-tabs-header-height: 48px;
+}
+.section-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+.grid-scroll {
+  min-height: 200px;
+}
+.pic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+.pic-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--el-fill-color-light);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.pic-cell:hover {
+  transform: scale(1.03);
+}
+.pic-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.pic-ph {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--el-text-color-placeholder);
+}
+.load-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px 0;
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
+}
+.load-more .muted {
+  color: var(--el-text-color-placeholder);
+}
+.rotating {
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 移动端适配 */
+@media (max-width: 767px) {
+  .picture-page {
+    padding: 0 4px;
+  }
+  .pic-grid {
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 6px;
+  }
+  .pic-cell {
+    border-radius: 6px;
+  }
+}
+</style>

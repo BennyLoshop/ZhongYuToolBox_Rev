@@ -1,0 +1,92 @@
+import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+const Placeholder = () => import('@/views/PlaceholderView.vue')
+
+const routes: RouteRecordRaw[] = [
+  { path: '/', redirect: '/login' },
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('@/views/LoginView.vue'),
+    meta: { title: '用户中心' }
+  },
+  {
+    path: '/note',
+    name: 'note',
+    component: () => import('@/views/note/NoteView.vue'),
+    meta: { title: '云笔记', keepAlive: true }
+  },
+  {
+    path: '/note/:fileId',
+    name: 'note-detail',
+    component: () => import('@/views/note/NoteDetailView.vue'),
+    meta: { title: '笔记预览', hideLayoutHeader: true, keepAlive: true }
+  },
+  { path: '/picture', name: 'picture', component: () => import('@/views/PictureView.vue'), meta: { title: '图库', keepAlive: true } },
+  { path: '/picture/detail', name: 'picture-detail', component: () => import('@/views/PictureDetailView.vue'), meta: { title: '图片详情', hideLayoutHeader: true, keepAlive: true } },
+  { path: '/mistake', name: 'mistake', component: () => import('@/views/MistakeView.vue'), meta: { title: '错题本', keepAlive: true } },
+  { path: '/mistake/:itemId', name: 'mistake-detail', component: () => import('@/views/MistakeDetailView.vue'), meta: { title: '错题详情', hideLayoutHeader: true, keepAlive: true } },
+  { path: '/quora', name: 'quora', component: () => import('@/views/QuoraView.vue'), meta: { title: '随身答', keepAlive: true } },
+  { path: '/quora/:sessionId', name: 'quora-detail', component: () => import('@/views/QuoraDetailView.vue'), meta: { title: '问题详情', hideLayoutHeader: true, keepAlive: true } },
+  { path: '/quora/:sessionId/board', name: 'quora-board', component: () => import('@/views/BoardView.vue'), meta: { title: '画板回复', hideLayoutHeader: true } },
+  { path: '/exam', name: 'exam', component: () => import('@/views/ExamView.vue'), meta: { title: '新测评', keepAlive: true } },
+  { path: '/exam/:taskId', name: 'exam-questions', component: () => import('@/views/ExamQuestionsView.vue'), meta: { title: '试题详情', hideLayoutHeader: true, keepAlive: true } },
+  { path: '/exam/:taskId/overview', name: 'exam-overview', component: () => import('@/views/ExamOverviewView.vue'), meta: { title: '考试概览', hideLayoutHeader: true, keepAlive: true } },
+  { path: '/exam/:taskId/analysis', name: 'exam-analysis', component: () => import('@/views/ExamAnalysisView.vue'), meta: { title: '题目分析', hideLayoutHeader: true, keepAlive: true } },
+  { path: '/column', name: 'column', component: () => import('@/views/IframeViews.vue'), props: { kind: 'column' }, meta: { title: '在线专栏', hideLayoutHeader: true } },
+  { path: '/course', name: 'course', component: () => import('@/views/IframeViews.vue'), props: { kind: 'course' }, meta: { title: '选课', hideLayoutHeader: true } },
+  {
+    path: '/lesson',
+    name: 'lesson',
+    component: () => import('@/views/lesson/LessonCourseListView.vue'),
+    meta: { title: '优客畅学', keepAlive: true }
+  },
+  {
+    path: '/lesson/:courseId',
+    name: 'lesson-catalog',
+    component: () => import('@/views/lesson/LessonCatalogView.vue'),
+    meta: { title: '优客畅学 · 章节', hideLayoutHeader: true, keepAlive: true }
+  },
+  {
+    path: '/lesson/:courseId/:catalogId',
+    name: 'lesson-chapter',
+    component: () => import('@/views/lesson/LessonChapterView.vue'),
+    meta: { title: '优客畅学 · 内容', hideLayoutHeader: true, keepAlive: true }
+  },
+  {
+    path: '/lesson/viewer',
+    name: 'lesson-viewer',
+    component: () => import('@/views/lesson/LessonViewerView.vue'),
+    meta: { title: '附件查看', hideLayoutHeader: true }
+  },
+  {
+    path: '/linspirer',
+    name: 'linspirer',
+    component: () => import('@/views/linspirer/LinspirerView.vue'),
+    meta: { title: '领创' }
+  },
+  { path: '/advance', name: 'advance', component: () => import('@/views/AdvanceView.vue'), meta: { title: '高级选项' } },
+  { path: '/dev', name: 'dev', component: () => import('@/views/DevelopView.vue'), meta: { title: '开发工具' } },
+  { path: '/share', name: 'share', component: () => import('@/views/ShareView.vue'), meta: { title: '分享' } },
+  { path: '/about', name: 'about', component: () => import('@/views/AboutView.vue'), meta: { title: '说明&致谢' } },
+  { path: '/donate', name: 'donate', component: () => import('@/views/DonateView.vue'), meta: { title: '支持作者' } },
+  { path: '/proxy', name: 'proxy', component: () => import('@/views/ProxyView.vue'), meta: { title: '下载加速插件' } }
+]
+
+const router = createRouter({
+  history: createWebHashHistory(),
+  routes
+})
+
+// 未登录拦截（登录页除外）
+router.beforeEach((to) => {
+  const auth = useAuthStore()
+  const publicPages = ['/login']
+  if (!publicPages.includes(to.path) && !auth.isLoggedIn) {
+    return { path: '/login' }
+  }
+  return true
+})
+
+export default router

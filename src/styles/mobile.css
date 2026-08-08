@@ -1,0 +1,64 @@
+/* ===== 全局 reset：清除浏览器默认外边距，避免界面整体四周出现空隙 ===== */
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+#app {
+  width: 100%;
+}
+
+/* 移动端全局适配（仅 max-width: 767px 生效） */
+@media (max-width: 767px) {
+  /* 减小卡片容器圆角 */
+  .el-card,
+  .note-tabs,
+  .el-dialog {
+    border-radius: 6px !important;
+  }
+  .el-card {
+    border-radius: 6px !important;
+  }
+
+  /* 减小内容区左右间隙 */
+  .content {
+    padding: 8px 8px !important;
+  }
+  /* 二级页面：顶栏接管，内容区去内边距（覆盖上面 !important） */
+  .content.flush {
+    padding: 0 !important;
+  }
+
+  .layout-root .mobile-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  /* 移动端抽屉侧栏：整体深色、贴边、去圆角，消除白色背景与四周空隙
+     （放全局样式以命中 Teleport 到 body 的 el-drawer） */
+  .mobile-drawer.el-drawer {
+    background: #1f2937 !important;
+    border-radius: 0 !important;
+  }
+  .mobile-drawer .el-drawer__header {
+    margin: 0 !important;
+    padding: 16px !important;
+    color: #fff !important;
+    background: #1f2937 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+  .mobile-drawer .el-drawer__close-btn {
+    color: #fff !important;
+  }
+  .mobile-drawer .el-drawer__body {
+    padding: 0 !important;
+    background: #1f2937 !important;
+  }
+  .mobile-drawer .el-menu,
+  .mobile-drawer .el-menu-item {
+    background-color: #1f2937 !important;
+  }
+}

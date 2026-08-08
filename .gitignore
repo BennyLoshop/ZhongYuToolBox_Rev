@@ -1,0 +1,31 @@
+# Logs
+build.log
+npm_debug.log*
+*.log
+
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build output
+dist/
+dist-ssr/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.local
+
+# CodeBuddy
+.codebuddy/
