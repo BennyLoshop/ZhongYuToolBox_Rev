@@ -161,12 +161,19 @@ onMounted(() => {
   startProxyPolling(onProxyStatusChange)
   const content = document.querySelector('.content')
   content?.addEventListener('scroll', onScroll)
+  // 让接管顶栏的二级页面（如在线专栏）也能唤起移动端侧栏抽屉
+  window.addEventListener('app:open-drawer', onOpenDrawer)
 })
 onUnmounted(() => {
   stopProxyPolling()
   const content = document.querySelector('.content')
   content?.removeEventListener('scroll', onScroll)
+  window.removeEventListener('app:open-drawer', onOpenDrawer)
 })
+
+function onOpenDrawer() {
+  drawer.value = true
+}
 </script>
 
 <style scoped>

@@ -3,6 +3,16 @@
     <div class="appbar">
       <el-icon class="back" @click="goBack"><ArrowLeft /></el-icon>
       <span class="appbar-title">{{ name || '附件查看' }}</span>
+      <el-button
+        v-if="kind === 'pdf' || kind === 'video'"
+        class="appbar-download"
+        type="primary"
+        plain
+        size="small"
+        :icon="Download"
+        :loading="downloading"
+        @click="download"
+      >下载</el-button>
     </div>
 
     <div class="viewer-body">
@@ -40,7 +50,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft } from '@element-plus/icons-vue'
+import { ArrowLeft, Download } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import DPlayer from 'dplayer'
 import VueOfficePptx from '@vue-office/pptx'
@@ -57,6 +67,7 @@ const pdfRef = ref<HTMLElement | null>(null)
 const videoRef = ref<HTMLElement | null>(null)
 const pdfLoading = ref(false)
 const pptxError = ref(false)
+const downloading = ref(false)
 let dp: DPlayer | null = null
 
 function goBack() {
@@ -64,8 +75,29 @@ function goBack() {
   else router.push('/lesson')
 }
 
-function download() {
-  if (url) window.open(url, '_blank')
+/* 通过 blob 方式下载 PDF（避免直接打开/跨域限制） */
+async function download() {
+  if (!url || downloading.value) return
+  downloading.value = true
+  try {
+    const resp = await fetch(proxyUrl(url))
+    if (!resp.ok) throw new Error('下载失败: ' + resp.status)
+    const blob = await resp.blob()
+    const objUrl = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = objUrl
+    // 用 URL 中的文件名，兜底用传入的 name
+    const fromUrl = decodeURIComponent(url.split('?')[0].split('/').pop() || '')
+    a.download = fromUrl || name || 'download.pdf'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(objUrl)
+  } catch (e: any) {
+    ElMessage.error('下载失败：' + (e?.message || e))
+  } finally {
+    downloading.value = false
+  }
 }
 
 function onPptxError(e: any) {
@@ -78,9 +110,11 @@ async function renderPdf(src: string) {
   if (!pdfRef.value) return
   pdfLoading.value = true
   try {
-    const pdfjs = await import('pdfjs-dist')
-    const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.js?url')).default
-    pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
+    const pdfjs = await import('pdfjs-dist/build/pdf.mjs')
+    if (!pdfjs.GlobalWorkerOptions.workerPort) {
+      const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default
+      pdfjs.GlobalWorkerOptions.workerPort = new Worker(workerUrl, { type: 'module' })
+    }
     const container = pdfRef.value
     container.innerHTML = ''
     const doc = await pdfjs.getDocument(proxyUrl(src)).promise
@@ -154,6 +188,10 @@ onBeforeUnmount(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.appbar-download {
+  flex-shrink: 0;
+  margin-left: 8px;
 }
 .viewer-body {
   flex: 1;

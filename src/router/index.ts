@@ -34,7 +34,9 @@ const routes: RouteRecordRaw[] = [
   { path: '/exam/:taskId', name: 'exam-questions', component: () => import('@/views/ExamQuestionsView.vue'), meta: { title: '试题详情', hideLayoutHeader: true, keepAlive: true } },
   { path: '/exam/:taskId/overview', name: 'exam-overview', component: () => import('@/views/ExamOverviewView.vue'), meta: { title: '考试概览', hideLayoutHeader: true, keepAlive: true } },
   { path: '/exam/:taskId/analysis', name: 'exam-analysis', component: () => import('@/views/ExamAnalysisView.vue'), meta: { title: '题目分析', hideLayoutHeader: true, keepAlive: true } },
-  { path: '/column', name: 'column', component: () => import('@/views/IframeViews.vue'), props: { kind: 'column' }, meta: { title: '在线专栏', hideLayoutHeader: true } },
+  { path: '/column', name: 'column', component: () => import('@/views/ColumnView.vue'), meta: { title: '在线专栏', hideLayoutHeader: true } },
+  { path: '/column/:pageId', name: 'column-detail', component: () => import('@/views/ColumnDetailView.vue'), meta: { title: '文章详情', hideLayoutHeader: true } },
+
   { path: '/course', name: 'course', component: () => import('@/views/IframeViews.vue'), props: { kind: 'course' }, meta: { title: '选课', hideLayoutHeader: true } },
   {
     path: '/lesson',
