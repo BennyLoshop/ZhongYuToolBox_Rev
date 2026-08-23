@@ -84,7 +84,7 @@ import { getExamTask, getExamOverview } from '@/api/exam'
 const route = useRoute()
 const router = useRouter()
 const { isMobile } = useIsMobile()
-const taskId = Number(route.params.taskId)
+const taskId = computed(() => Number(route.params.taskId))
 const name = ref(String(route.query.name || ''))
 const examId = ref<number | null>(null)
 
@@ -107,7 +107,7 @@ async function load() {
   loading.value = true
   overview.value = null
   try {
-    const exam = await getExamTask(taskId)
+    const exam = await getExamTask(taskId.value)
     examId.value = Number(exam?.examId ?? exam?.examTaskId ?? taskId)
     if (!name.value && exam?.examName) name.value = exam.examName
     overview.value = await getExamOverview(examId.value)
@@ -123,10 +123,10 @@ function goBack() {
   else router.push('/exam')
 }
 function goQuestions() {
-  router.push(`/exam/${taskId}${name.value ? `?name=${encodeURIComponent(name.value)}` : ''}`)
+  router.push(`/exam/${taskId.value}${name.value ? `?name=${encodeURIComponent(name.value)}` : ''}`)
 }
 function goAnalysis() {
-  router.push(`/exam/${taskId}/analysis${name.value ? `?name=${encodeURIComponent(name.value)}` : ''}`)
+  router.push(`/exam/${taskId.value}/analysis${name.value ? `?name=${encodeURIComponent(name.value)}` : ''}`)
 }
 
 const mobileMenuVisible = ref(false)

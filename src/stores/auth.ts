@@ -72,6 +72,10 @@ export const useAuthStore = defineStore('auth', {
       if (schoolSelect === 'other') {
         if (!schoolCode) throw new Error('请输入学校代码')
         const info = await discoverSchool(schoolCode)
+        // 复刻旧 index.js 的 apihost 特判：部分学校 discovery 返回的是旧 http 域名，
+        // 需替换为对应的 loshop.com.cn https 域名，否则下方 https 校验会误判不支持
+        if (info.server === 'http://sxzsyxx.api.zykj.org') info.server = 'https://zyapi-sxzsyxx.loshop.com.cn'
+        if (info.server === 'http://bjbsz.api2.zykj.org') info.server = 'https://zyapi-bjbsz.loshop.com.cn'
         if (!info.server.startsWith('https://')) throw new Error('学校服务器环境不支持自适应登录')
         apiBaseUrl = info.server
       }

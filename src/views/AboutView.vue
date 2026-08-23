@@ -1,29 +1,85 @@
 <template>
   <div class="about-page">
-    <el-card class="block">
-      <h2 class="title">中育工具箱 · 说明与致谢</h2>
-      <p>
-        中育工具箱是一款面向中育账号用户的资源聚合工具，整合了云笔记、图库、错题本、随身答、
-        新测评、在线专栏、选课、优客畅学、领创、分享等十余个功能模块，旨在为中育生态用户提供统一、便捷的工具入口。
-      </p>
-      <p class="muted">
-        本工具仅供学习与交流使用，所有数据均来自中育官方接口，账号与凭证仅保存在本机浏览器中。
-      </p>
-    </el-card>
+    <el-card class="block" header="使用说明">
+      <section class="usage">
+        <h3>云笔记</h3>
+        <p class="muted">搜索、预览和下载云笔记中的原始图片和附件。</p>
+        <ul>
+          <li>在搜索框中输入笔记名称关键词进行搜索</li>
+          <li>支持文件夹视图浏览和分页加载</li>
+          <li>点击笔记即可下载原始图片压缩包</li>
+          <li>支持 <strong>PDF 上传</strong> 转存到云笔记</li>
+        </ul>
 
-    <el-card class="block" header="技术栈">
-      <ul class="tech">
-        <li>Vue 3 + TypeScript + Vite</li>
-        <li>Element Plus 组件库</li>
-        <li>Pinia 状态管理 / Vue Router 路由</li>
-        <li>crypto-js（AES/MD5 加解密）、ali-oss（对象存储直传）</li>
-        <li>pdfjs-dist（PDF 转图）、jszip（打包）、fabric（画板）</li>
-        <li>DPlayer（视频播放）</li>
-      </ul>
+        <h3>在线专栏</h3>
+        <p class="muted">浏览中育课程章节内容。</p>
+        <ul>
+          <li>选择课程后自动加载章节列表</li>
+          <li>点击章节即可在线预览内容</li>
+          <li>支持 <strong>下载源文件</strong>（视频、文档等）</li>
+          <li>遇到渲染问题可点击"手动渲染"按钮重试</li>
+        </ul>
+
+        <h3>错题本</h3>
+        <p class="muted">查看、筛选和下载错题笔记。</p>
+        <ul>
+          <li>按学科和分类筛选错题合集</li>
+          <li>点击错题可预览笔记图片和原始文件</li>
+          <li>支持下载错题笔记压缩包</li>
+        </ul>
+
+        <h3>随身答</h3>
+        <p class="muted">浏览和回复问答内容。</p>
+        <ul>
+          <li>按学科和分类筛选问答列表</li>
+          <li>点击问题进入详情，查看图片和回复</li>
+          <li>支持 <strong>回复功能</strong>，可直接提交答案</li>
+          <li>支持下载完整图片压缩包</li>
+        </ul>
+
+        <h3>优课畅学</h3>
+        <p class="muted">浏览课程资源和在线学习。</p>
+        <ul>
+          <li>选择学科和课程后即可进入学习</li>
+          <li>支持 <strong>选课功能</strong></li>
+          <li>支持课程分享</li>
+        </ul>
+
+        <h3>下载应用</h3>
+        <p class="muted">获取中育官方 App 安装包。</p>
+        <ul>
+          <li>选择对应的应用链接下载 APK</li>
+        </ul>
+
+        <h3>开发工具</h3>
+        <p class="muted">开发者辅助功能。</p>
+        <ul>
+          <li><strong>图库查看</strong>：浏览和管理上传的图片</li>
+          <li><strong>OSS 上传</strong>：上传文件到阿里云 OSS 存储</li>
+          <li><strong>题库上传</strong>：批量上传试题数据</li>
+        </ul>
+
+        <h3>领创</h3>
+        <p class="muted">管理领创平台设备应用和计算管理员密码。</p>
+        <ul>
+          <li>输入 <strong>设备号、用户名、设备型号</strong> 后点击"登录并获取应用"</li>
+          <li>用户名自动从中育登录信息填充</li>
+          <li>在"应用管理"中查看应用列表，点击详情可查看图标、下载地址</li>
+          <li>在"密码计算器"中输入设备号即可获取管理员密码（每天动态变化）</li>
+          <li>移动端下载时会弹窗显示下载链接供复制使用</li>
+        </ul>
+
+        <h3>新测评</h3>
+        <p class="muted">查看测评任务和数据。</p>
+        <ul>
+          <li>浏览测评列表和详情</li>
+        </ul>
+      </section>
     </el-card>
 
     <el-card class="block" header="致谢">
-      <p>感谢中育开放平台提供的接口能力，以及所有为工具箱迭代献策的用户。</p>
+      <p>感谢各位的使用，我们有缘再会。</p>
+      <p>开发：Loshop</p>
     </el-card>
 
     <el-card class="block" header="更新日志">
@@ -78,8 +134,21 @@ onMounted(loadChangelog)
 .title {
   margin: 0 0 12px;
 }
-.tech {
-  margin: 0;
+.usage h3 {
+  margin: 18px 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--el-color-primary);
+}
+.usage h3:first-child {
+  margin-top: 0;
+}
+.usage p {
+  margin: 0 0 8px;
+  line-height: 1.7;
+}
+.usage ul {
+  margin: 0 0 6px;
   padding-left: 20px;
   line-height: 1.9;
 }

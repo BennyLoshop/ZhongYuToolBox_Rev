@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, Document, DataLine, MoreFilled } from '@element-plus/icons-vue'
@@ -75,7 +75,7 @@ import { getExamTask, getExamOverview, getQuestionAnalysis } from '@/api/exam'
 const route = useRoute()
 const router = useRouter()
 const { isMobile } = useIsMobile()
-const taskId = Number(route.params.taskId)
+const taskId = computed(() => Number(route.params.taskId))
 const name = ref(String(route.query.name || ''))
 const examId = ref<number | null>(null)
 
@@ -91,7 +91,7 @@ async function load() {
   loading.value = true
   analysisGroups.value = []
   try {
-    const exam = await getExamTask(taskId)
+    const exam = await getExamTask(taskId.value)
     examId.value = Number(exam?.examId ?? exam?.examTaskId ?? taskId)
     if (!name.value && exam?.examName) name.value = exam.examName
 
@@ -116,10 +116,10 @@ function goBack() {
   else router.push('/exam')
 }
 function goQuestions() {
-  router.push(`/exam/${taskId}${name.value ? `?name=${encodeURIComponent(name.value)}` : ''}`)
+  router.push(`/exam/${taskId.value}${name.value ? `?name=${encodeURIComponent(name.value)}` : ''}`)
 }
 function goOverview() {
-  router.push(`/exam/${taskId}/overview${name.value ? `?name=${encodeURIComponent(name.value)}` : ''}`)
+  router.push(`/exam/${taskId.value}/overview${name.value ? `?name=${encodeURIComponent(name.value)}` : ''}`)
 }
 
 const mobileMenuVisible = ref(false)

@@ -6,7 +6,7 @@
       </template>
 
       <div v-if="!auth.isLoggedIn">
-        <el-form label-position="top" @submit.prevent="onLogin">
+        <el-form label-position="top" autocomplete="on" @submit.prevent="onLogin">
           <el-form-item label="学校">
             <el-select v-model="schoolSelect" @change="onSchoolChange" style="width: 100%">
               <el-option label="省锡中" value="sxz" />
@@ -15,15 +15,15 @@
           </el-form-item>
 
           <el-form-item v-if="schoolSelect === 'other'" label="学校代码">
-            <el-input v-model="schoolCode" placeholder="输入学校代码" />
+            <el-input v-model="schoolCode" name="schoolCode" autocomplete="off" placeholder="输入学校代码" />
           </el-form-item>
 
           <el-form-item label="用户名">
-            <el-input v-model="account" placeholder="输入用户名" autofocus />
+            <el-input v-model="account" name="username" autocomplete="username" placeholder="输入用户名" autofocus />
           </el-form-item>
 
           <el-form-item label="密码">
-            <el-input v-model="password" type="password" placeholder="输入密码" show-password @keyup.enter="onLogin" />
+            <el-input v-model="password" name="password" autocomplete="current-password" type="password" placeholder="输入密码" show-password @keyup.enter="onLogin" />
           </el-form-item>
 
           <el-button
